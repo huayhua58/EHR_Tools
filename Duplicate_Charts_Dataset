@@ -1,0 +1,29 @@
+-- Run this query to get list of all duplicate charts in EHR
+-- Includes PATID, address, SSN, gurantor as main client identifying information
+
+SELECT DISTINCT
+    a.patid,
+    a.date_of_birth,
+    a.patient_name_last,
+    a.patient_name_first,
+    a.patient_add_street_1,
+    a.patient_home_phone,
+    a.patient_ssn,
+    a.ethnic_origin_value, 
+    a.race_value,
+    a.gender_identity_value,
+    c.GUARANTOR_ID 
+FROM SYSTEM.patient_current_demographics a
+JOIN SYSTEM.patient_current_demographics b
+	ON a.date_of_birth = b.date_of_birth  
+JOIN SYSTEM.billing_guar_data c
+    ON a.PATID = c.PATID    
+WHERE a.PATID <> b.PATID
+AND a.patid NOT IN ('600010','600011')
+AND a.patient_name_last LIKE (b.patient_name_last)
+AND a.patient_name_first LIKE b.patient_name_first 
+GROUP BY 
+	a.patid,b.patid
+ORDER BY 
+	a.date_of_birth ASC,
+  a.patient_name_last ASC
