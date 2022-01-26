@@ -1,0 +1,116 @@
+-- These are the widgets located in the AppSupport Helpdesk view
+-- Widgets use data from the forms System Change Request and Chart Merge Request.
+
+-- Widget #1: Items in Queue by Staff
+-- Widget ID: APPSUPPORT_STAFFTOTAL
+
+SELECT 
+assigned_to_Value as "Staff",
+COUNT(ID) as "Current Assignments"
+FROM SYSTEM.system_change_req 
+WHERE disposition <> '30'
+AND draft_final <> 'F'
+GROUP BY assigned_to
+
+-- Widget #2: My Assingments - Completed
+-- Widget ID: APPSUPPORT_MYCOMPLETE
+
+SELECT 
+CUSTRDHABQ_UID as "UNID" <HIDE:UNID>,
+Staff_ID as "ENTITYID" <HIDE:ENTITYID>,
+Option_Id as "OPTIONID" <HIDE:OPTIONID>,
+date_of_request as "Date of Request",
+requested_by_Value as "Requested By",
+request_type_Value as "Request Type" <LINK:OPTIONID:ENTITYID:UNID::PM:Request Type>,
+LEFT(gen_additional_info,80) as "Description",
+priority_Value as "Priority",
+disposition_Value as "Disposition",
+anticipated_completion as "Anticipated Completion" 
+FROM SYSTEM.system_change_req 
+WHERE assigned_to = (SELECT u.USERID FROM SYSTEM.RADplus_users u WHERE u.USERID = ?USERID)
+AND draft_final = 'F' AND disposition = '25'
+ORDER BY date_of_request, priority DESC
+
+-- Widget #3: Working Queue
+-- Widget ID: APPSUPPORT_WOKRING
+
+SELECT 
+Staff_ID as "ENTITYID" <HIDE:ENTITYID>,
+date_of_request as "Date of Request",
+requested_by_Value as "Requested By",
+request_type_Value as "Request Type" <LINK:OPTIONID:ENTITYID:UNID::PM:Request Type>,
+LEFT(gen_additional_info,80) as "Description",
+priority_Value as "Priority",
+disposition_Value as "Disposition",
+anticipated_completion as "Anticipated Completion",
+assigned_to_Value as "Assigned To",
+Option_Id as "OPTIONID" <HIDE:OPTIONID>,
+CUSTRDHABQ_UID as "UNID" <HIDE:UNID>
+FROM SYSTEM.system_change_req 
+WHERE draft_final = 'D'
+AND assigned_to IS NOT NULL
+ORDER BY date_of_request , priority DESC
+
+-- Widget #4: Unassigned Requests
+-- Widget ID: APPSUPPORT_UNASSIGNED
+
+SELECT
+CUSTRDHABQ_UID as "UNID" <HIDE:UNID>,
+Staff_ID as "ENTITYID" <HIDE:ENTITYID>,
+Option_Id as "OPTIONID" <HIDE:OPTIONID>,
+date_of_request as "Date of Request",
+requested_by_Value as "Requested By",
+request_type_Value as "Request Type" <LINK:OPTIONID:ENTITYID:UNID::PM:Request Type>,
+LEFT(gen_additional_info,80) as "Description",
+priority_Value as "Priority"
+FROM SYSTEM.system_change_req 
+WHERE assigned_to IS NULL
+AND draft_final = 'D'
+
+-- Widget #5: Total Items Unassigned
+-- Widget ID: APPSUPPORT_UNASSIGNED TOTAL
+
+--SQL Statement #1 
+SELECT 
+COUNT(requested_by_value) as "Unassigned Requests"
+FROM SYSTEM.system_change_req 
+WHERE assigned_to IS NULL
+AND draft_final = 'D'
+
+--SQL Statement #2
+SELECT 
+COUNT(data_entry_by_login) as "DupUnassigned"
+FROM System.chart_merge_request
+WHERE assigned_to_Value IS NULL
+AND draft_final = 'D'
+
+-- SQL Statement #3
+SELECT 
+SUM (CASE 
+WHEN DATEDIFF(day,date_of_request, getdate()) >= 5
+THEN 1
+ELSE 0
+END) Over5
+FROM system.system_change_req
+WHERE assigned_to IS NULL
+
+-- HTML CODE for widget #5
+
+<html>
+<table>
+<tr> 
+<th> System Change </th>
+<th> Chart Merge</th>
+<th> Over 5 Days </th>
+</tr>
+
+<tr>
+<td><SQLVAR:1:Unassigned Requests></td>
+<td><SQLVAR:2:DupUnassigned> </td>
+<td><SQLVAR:3:Over5> </td>
+</tr>
+</table>
+</html>
+
+
+
