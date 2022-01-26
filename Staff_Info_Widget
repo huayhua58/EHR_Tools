@@ -1,0 +1,78 @@
+-- This information is for the Staff Information Console view and the widget within this view
+
+-- Widget: Staff Information
+-- Widget ID: STAFF_INFO
+
+-- SQL Statement #1 
+SELECT 
+staff_member_id as "Staff ID",
+user_description as "Staff Name",
+STRING('Logon ID: ',userid) as "Logon ID",
+'User Roles' as "RoleLabel",
+REPLACE(trim(LEADING '&' FROM USERROLE),'&', '<BR>') as "User Roles"
+from radplus_users
+where staff_member_id = ?STAFFID
+
+-- SQL Statement #2 
+SELECT 
+office_add_street as "Street",
+office_add_state as "State",
+office_add_zip as "Zip",
+'Work Address : ' as "Work Address",
+'Registration Date: ' as "RegDate",
+'Credentials' as "Credentials",
+CONVERT(VARCHAR,registration_date,101) as "Registration Date",
+practitioner_category_value as "Creds", 
+replace(discipline_value,'&','<BR>') as "Discipline",
+'NPI : ' as "NPI",
+NPI_number as "NPI Number"
+FROM staff_enrollment_history
+WHERE STAFFID = ?STAFFID
+
+-- SQL Statement #3
+SELECT 
+dea_license_number as "DEA Number",
+dea_expiration_date as "DEA Expiration Date"
+FROM staff_confidential_info
+WHERE STAFFID = ?STAFFID
+
+-- SQL Statement #4
+SELECT 
+'TermiNation Info' as "TermInfo",
+CONVERT(VARCHAR,Termination_date,101) as "Termination Date",
+reason_for_termination_code as "Reason for Termination"
+FROM staff_termination_history
+WHERE STAFFID = ?STAFFID
+
+-- HTML Code for Widget #1
+
+<html>
+<body>
+<font size = 4><b>
+<SQLVAR:1:Staff ID></b>  <SQLVAR:1:Staff Name><br></b>
+<SQLVAR:1:Logon ID><br><br>
+<font size = 4><b>
+<SQLVAR:1:RoleLabel><br></b></font>
+<SQLVAR:1:User Roles>
+<LINK:Launch User Definition:GUISYS101:?STAFFID><br><br>
+
+<font size = 4><b>
+<SQLVAR:2:Work Address></b>
+<SQLVAR:2:Street> <SQLVAR:2:State> <SQLVAR:2:Zip><br>
+<font size = 4><b>
+<SQLVAR:2:RegDate></b>
+<SQLVAR:2:Registration Date><br><br>
+<font size = 4><b>
+<SQLVAR:2:Credentials><br></b>
+<SQLVAR:2:Creds><br>
+<SQLVAR:2:Discipline><br>
+<SQLVAR:2:NPI> <SQLVAR:2:NPI Number><br>
+<SQLVAR:3:DEA Number><br>
+<SQLVAR:3:DEA Expiration Date><br>
+<LINK:Launch Practitioner Enrollment:STAFF500:?STAFFID><br><br>
+<font size = 4><b>
+<SQLVAR:4:TermInfo></b><br>
+<SQLVAR:4:Termination Date><br>
+
+</body>
+</html>
